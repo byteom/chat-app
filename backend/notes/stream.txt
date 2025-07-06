@@ -1,0 +1,164 @@
+STREAM.JS WORKFLOW TREE
+========================
+
+📁 backend/src/lib/stream.js
+├── 📦 IMPORTS
+│   ├── import {StreamChat} from "stream-chat"
+│   └── import dotenv from "dotenv"
+│
+├── ⚙️ CONFIGURATION
+│   ├── dotenv.config()
+│   ├── const apiKey = process.env.STREAM_API_KEY
+│   ├── const apiSecret = process.env.STREAM_API_SECRET
+│   └── console.log("DEBUG: STREAM_API_KEY:", apiKey ? "LOADED" : "NOT FOUND!")
+│
+├── 🔧 CLIENT INITIALIZATION
+│   ├── const streamClient = StreamChat.getInstance(apiKey, apiSecret)
+│   └── console.log("DEBUG: Stream client initialized with API key:", apiKey ? "PRESENT" : "MISSING")
+│
+└── 🚀 EXPORTED FUNCTION: upsertStreamUser(userData)
+    ├── 📥 INPUT VALIDATION
+    │   └── userData object containing: {id, name, image}
+    │
+    ├── 🔄 DATA TRANSFORMATION
+    │   ├── const streamUser = {
+    │   │   ├── id: userData.id
+    │   │   ├── name: userData.name
+    │   │   └── image: userData.image || ""
+    │   │   └── }
+    │   └── console.log("DEBUG: About to call streamClient.upsertUsers with:", JSON.stringify([streamUser], null, 2))
+    │
+    ├── 🌐 API CALL
+    │   ├── const result = await streamClient.upsertUsers([streamUser])
+    │   └── console.log("DEBUG: Stream API response:", JSON.stringify(result, null, 2))
+    │
+    ├── ✅ SUCCESS PATH
+    │   ├── console.log("Stream user created successfully:", streamUser.id)
+    │   └── return userData
+    │
+    └── ❌ ERROR HANDLING
+        ├── console.error("Error upserting Stream user:", error)
+        ├── console.error("Error details:", error.message)
+        ├── if (error.response) {
+        │   └── console.error("Error response:", error.response.data)
+        │   └── }
+        └── throw new Error("Failed to upsert Stream user")
+
+USAGE FLOW:
+==========
+1. User signs up → auth.controllers.js calls upsertStreamUser()
+2. upsertStreamUser() transforms user data for Stream format
+3. Makes API call to Stream Chat using upsertUsers()
+4. Returns success or throws error
+5. Controller handles response and continues signup process
+
+ENVIRONMENT VARIABLES REQUIRED:
+==============================
+- STREAM_API_KEY: Your Stream Chat API key
+- STREAM_API_SECRET: Your Stream Chat API secret
+
+DEPENDENCIES:
+============
+- stream-chat: Stream Chat SDK
+- dotenv: Environment variable management
+
+ONBOARDING ISSUES & FIXES:
+==========================
+
+🚨 ISSUES FOUND:
+├── ❌ Typo in password validation: "legth" → "length"
+├── ❌ Missing return statement in password validation
+├── ❌ Redundant save operation after User.create()
+├── ❌ Missing Stream user update in onboarding function
+└── ❌ Incomplete error handling in onboarding
+
+✅ FIXES APPLIED:
+├── ✅ Fixed password validation typo and added return
+├── ✅ Removed redundant newUser.save() call
+├── ✅ Added Stream user update in onboarding function
+├── ✅ Added proper error handling for Stream updates
+└── ✅ Added success logging for onboarding
+
+ONBOARDING FLOW:
+===============
+1. User completes signup → User created in MongoDB
+2. User goes through onboarding → Updates profile info
+3. Onboarding function updates user in MongoDB
+4. Onboarding function updates user in Stream Chat
+5. Success response sent to frontend
+
+AUTHENTICATION:
+==============
+- protectRoute middleware properly configured
+- Onboarding route protected with authentication
+- req.user populated correctly for onboarding function
+
+401 UNAUTHORIZED TROUBLESHOOTING:
+================================
+
+🚨 ISSUE: Cookie Name Mismatch
+├── ❌ Middleware was looking for: req.cookies.jwt
+├── ❌ Controllers were setting: res.cookie("token", ...)
+└── ✅ FIXED: Updated middleware to use req.cookies.token
+
+🔍 DEBUG STEPS:
+1. Check if user is logged in (has valid token)
+2. Check browser cookies for "token" cookie
+3. Verify JWT_SECRET_KEY environment variable
+4. Check if token is expired (7 days)
+5. Verify user exists in database
+
+🐛 DEBUG LOGS ADDED:
+├── console.log("DEBUG: Cookies received:", req.cookies)
+├── console.log("DEBUG: Token found:", token.substring(0, 20) + "...")
+├── console.log("DEBUG: Token decoded successfully, userId:", decoded.userId)
+└── console.log("DEBUG: No token found in cookies")
+
+🔧 COMMON FIXES:
+1. ✅ Cookie name mismatch fixed
+2. ✅ Debug logging added
+3. ✅ Cookie-parser middleware confirmed
+4. ✅ JWT verification working
+
+400 BAD REQUEST TROUBLESHOOTING:
+================================
+
+🚨 ISSUE: Missing Required Fields in Onboarding
+├── ❌ Onboarding requires: fullName, bio, nativeLanguage, learningLanguage, location
+├── ❌ Frontend might not be sending all required fields
+└── ✅ FIXED: Added detailed debugging to identify missing fields
+
+📋 REQUIRED ONBOARDING FIELDS:
+==============================
+{
+  "fullName": "string (required)",
+  "bio": "string (required)", 
+  "nativeLanguage": "string (required)",
+  "learningLanguage": "string (required)",
+  "location": "string (required)"
+}
+
+🔍 DEBUG STEPS:
+1. Check request body in console logs
+2. Verify all 5 required fields are present
+3. Check field names match exactly (case-sensitive)
+4. Ensure fields are not empty strings
+5. Verify Content-Type is application/json
+
+🐛 DEBUG LOGS ADDED:
+├── console.log("DEBUG: Onboarding request body:", JSON.stringify(req.body, null, 2))
+├── console.log("DEBUG: User ID from token:", req.user._id)
+├── console.log("DEBUG: Extracted fields:", {field: !!value})
+└── console.log("DEBUG: Missing fields:", {field: !value})
+
+📋 TESTING CHECKLIST:
+====================
+□ User signs up successfully
+□ Login returns 200 status
+□ Cookie is set with name "token"
+□ Onboarding route accepts authenticated requests
+□ Stream user is created/updated
+□ No 401 errors in console
+□ All required onboarding fields are sent
+□ Request body format is correct
+□ No 400 errors in console

@@ -1,0 +1,280 @@
+CHAT APP BACKEND - COMPLETE PROJECT TREE MAP
+============================================
+
+📁 backend/
+├── 📄 package.json
+│   ├── name: "backend"
+│   ├── version: "1.0.0"
+│   ├── main: "src/server.js"
+│   ├── scripts: { dev: "nodemon src/server.js" }
+│   └── dependencies: [express, mongoose, bcryptjs, jsonwebtoken, cookie-parser, cors, dotenv, stream-chat, nodemon]
+│
+├── 📄 package-lock.json
+│   └── Locked dependency versions
+│
+└── 📁 src/
+    ├── 📄 server.js (MAIN ENTRY POINT)
+    │   ├── 🔧 IMPORTS
+    │   │   ├── express, dotenv
+    │   │   ├── authRoutes, userRoutes, chatRoutes
+    │   │   ├── connectDb, cookieParser
+    │   │   └── dotenv.config()
+    │   │
+    │   ├── ⚙️ SERVER SETUP
+    │   │   ├── const app = express()
+    │   │   ├── const PORT = process.env.PORT || 3000
+    │   │   └── Middleware: express.json(), express.urlencoded(), cookieParser()
+    │   │
+    │   ├── 🛣️ ROUTES
+    │   │   ├── app.use("/api/auth", authRoutes)
+    │   │   ├── app.use("/api/user", userRoutes)
+    │   │   └── app.use("/api/chat", chatRoutes)
+    │   │
+    │   └── 🚀 SERVER START
+    │       ├── app.listen(PORT, callback)
+    │       └── connectDb()
+    │
+    ├── 📁 lib/
+    │   ├── 📄 db.js (DATABASE CONNECTION)
+    │   │   ├── 🔧 IMPORTS: mongoose, dotenv
+    │   │   ├── ⚙️ CONFIG: dotenv.config()
+    │   │   ├── 🔌 CONNECT FUNCTION: connectDb()
+    │   │   │   ├── mongoose.connect(process.env.MONGO_URI)
+    │   │   │   ├── Success: console.log connection host
+    │   │   │   └── Error: console.log error + process.exit(1)
+    │   │   └── 📤 EXPORT: connectDb
+    │   │
+    │   └── 📄 stream.js (STREAM CHAT INTEGRATION)
+    │       ├── 🔧 IMPORTS: StreamChat, dotenv
+    │       ├── ⚙️ CONFIG: dotenv.config(), apiKey, apiSecret
+    │       ├── 🔧 CLIENT: StreamChat.getInstance(apiKey, apiSecret)
+    │       ├── 👤 UPSERT USER: upsertStreamUser(userData)
+    │       │   ├── Input: {id, name, image}
+    │       │   ├── Transform: streamUser object
+    │       │   ├── API Call: streamClient.upsertUsers([streamUser])
+    │       │   ├── Success: return userData
+    │       │   └── Error: throw Error
+    │       ├── 🎫 GENERATE TOKEN: generateStreamToken(userId)
+    │       │   ├── Input: userId (string)
+    │       │   ├── Validation: apiKey, apiSecret check
+    │       │   ├── Generate: streamClient.createToken(userIdStr)
+    │       │   └── Return: token or throw Error
+    │       └── 📤 EXPORTS: upsertStreamUser, generateStreamToken
+    │
+    ├── 📁 models/
+    │   ├── 📄 User.js (USER MODEL)
+    │   │   ├── 🔧 IMPORTS: mongoose, bcrypt
+    │   │   ├── 📋 SCHEMA: userSchema
+    │   │   │   ├── fullName: String (required)
+    │   │   │   ├── email: String (required, unique)
+    │   │   │   ├── password: String (required, min 6)
+    │   │   │   ├── bio: String (default: "")
+    │   │   │   ├── profilePicture: String (default: "")
+    │   │   │   ├── nativeLanguage: String (default: "")
+    │   │   │   ├── learningLanguage: String (default: "")
+    │   │   │   ├── location: String (default: "")
+    │   │   │   ├── isOnboarding: Boolean (default: false)
+    │   │   │   ├── friends: [ObjectId] (ref: User)
+    │   │   │   └── timestamps: true
+    │   │   │
+    │   │   ├── 🔐 PRE-SAVE MIDDLEWARE
+    │   │   │   ├── Check: if password modified
+    │   │   │   ├── Hash: bcrypt.genSalt(10) + bcrypt.hash()
+    │   │   │   └── Error: next(error)
+    │   │   │
+    │   │   ├── 🔑 METHODS: matchPassword(enteredPassword)
+    │   │   │   ├── Compare: bcrypt.compare(enteredPassword, this.password)
+    │   │   │   └── Return: boolean
+    │   │   │
+    │   │   └── 📤 EXPORT: User model
+    │   │
+    │   └── 📄 FriendRequest.js (FRIEND REQUEST MODEL)
+    │       ├── 🔧 IMPORTS: mongoose, User
+    │       ├── 📋 SCHEMA: friendRequestSchema
+    │       │   ├── sender: ObjectId (ref: User, required)
+    │       │   ├── recipient: ObjectId (ref: User, required)
+    │       │   ├── status: String (enum: ["pending", "accepted"], default: "pending")
+    │       │   └── timestamps: true
+    │       │
+    │       └── 📤 EXPORT: FriendRequest model
+    │
+    ├── 📁 middleware/
+    │   └── 📄 auth.middleware.js (AUTHENTICATION MIDDLEWARE)
+    │       ├── 🔧 IMPORTS: jwt, User
+    │       ├── 🛡️ PROTECT ROUTE: protectRoute(req, res, next)
+    │       │   ├── Extract: token from req.cookies.token
+    │       │   ├── Validate: token exists
+    │       │   ├── Verify: jwt.verify(token, JWT_SECRET_KEY)
+    │       │   ├── Find User: User.findById(decoded.userId).select("-password")
+    │       │   ├── Attach: req.user = user
+    │       │   └── Continue: next()
+    │       │
+    │       └── 📤 EXPORT: protectRoute
+    │
+    ├── 📁 controllers/
+    │   ├── 📄 auth.controllers.js (AUTHENTICATION CONTROLLERS)
+    │   │   ├── 🔧 IMPORTS: jwt, User, upsertStreamUser
+    │   │   │
+    │   │   ├── 👤 SIGNUP: signup(req, res)
+    │   │   │   ├── Validate: email, password, fullName
+    │   │   │   ├── Check: password length >= 6
+    │   │   │   ├── Validate: email format (regex)
+    │   │   │   ├── Check: existing user
+    │   │   │   ├── Generate: random avatar URL
+    │   │   │   ├── Create: User.create()
+    │   │   │   ├── Stream: upsertStreamUser()
+    │   │   │   ├── Generate: JWT token
+    │   │   │   ├── Set Cookie: res.cookie("token", token, options)
+    │   │   │   └── Response: 201 success
+    │   │   │
+    │   │   ├── 🔑 LOGIN: login(req, res)
+    │   │   │   ├── Validate: email, password
+    │   │   │   ├── Find: User.findOne({ email })
+    │   │   │   ├── Verify: user.matchPassword(password)
+    │   │   │   ├── Generate: JWT token
+    │   │   │   ├── Set Cookie: res.cookie("token", token, options)
+    │   │   │   └── Response: 200 success
+    │   │   │
+    │   │   ├── 🚪 LOGOUT: logout(req, res)
+    │   │   │   ├── Clear: res.clearCookie("token", options)
+    │   │   │   └── Response: 200 success
+    │   │   │
+    │   │   └── 📝 ONBOARD: onboard(req, res)
+    │   │       ├── Extract: userId from req.user._id
+    │   │       ├── Validate: fullName, bio, nativeLanguage, learningLanguage, location
+    │   │       ├── Update: User.findByIdAndUpdate()
+    │   │       ├── Stream: upsertStreamUser()
+    │   │       └── Response: 200 success + user data
+    │   │
+    │   ├── 📄 user.controllers.js (USER MANAGEMENT CONTROLLERS)
+    │   │   ├── 🔧 IMPORTS: User, FriendRequest
+    │   │   │
+    │   │   ├── 👥 GET RECOMMENDED: getRecommendedUsers(req, res)
+    │   │   │   ├── Get: currentUserId from req.user.id
+    │   │   │   ├── Find: User.find() with conditions
+    │   │   │   │   ├── Exclude: current user
+    │   │   │   │   ├── Exclude: existing friends
+    │   │   │   │   └── Include: only onboarded users
+    │   │   │   └── Response: 200 + recommended users
+    │   │   │
+    │   │   ├── 👫 GET FRIENDS: getMyFriends(req, res)
+    │   │   │   ├── Find: User.findById(req.user.id)
+    │   │   │   ├── Select: "friends" field
+    │   │   │   ├── Populate: friends with specific fields
+    │   │   │   └── Response: 200 + friends array
+    │   │   │
+    │   │   ├── 📤 SEND REQUEST: sendFriendRequest(req, res)
+    │   │   │   ├── Get: myId, recipientId
+    │   │   │   ├── Validate: not sending to self
+    │   │   │   ├── Find: recipient user
+    │   │   │   ├── Check: not already friends
+    │   │   │   ├── Check: no existing request
+    │   │   │   ├── Create: FriendRequest.create()
+    │   │   │   └── Response: 201 + friend request
+    │   │   │
+    │   │   ├── ✅ ACCEPT REQUEST: acceptFriendRequest(req, res)
+    │   │   │   ├── Find: FriendRequest.findById(requestId)
+    │   │   │   ├── Validate: current user is recipient
+    │   │   │   ├── Check: status not already accepted
+    │   │   │   ├── Update: status = "accepted"
+    │   │   │   ├── Update: both users' friends arrays
+    │   │   │   └── Response: 200 success
+    │   │   │
+    │   │   ├── 📥 GET INCOMING: getFriendRequest(req, res)
+    │   │   │   ├── Find: pending requests (recipient: req.user.id)
+    │   │   │   ├── Find: accepted requests (recipient: req.user.id)
+    │   │   │   ├── Populate: sender details
+    │   │   │   └── Response: 200 + {incomingRequests, acceptedRequests}
+    │   │   │
+    │   │   └── 📤 GET OUTGOING: getOutgoingFriendReqs(req, res)
+    │   │       ├── Find: pending requests (sender: req.user.id)
+    │   │       ├── Populate: recipient details
+    │   │       └── Response: 200 + outgoing requests
+    │   │
+    │   └── 📄 chat.controllers.js (CHAT CONTROLLERS)
+    │       ├── 🔧 IMPORTS: generateStreamToken
+    │       │
+    │       └── 🎫 GET STREAM TOKEN: getStreamToken(req, res)
+    │           ├── Generate: generateStreamToken(req.user.id)
+    │           └── Response: 200 + {token}
+    │
+    └── 📁 routes/
+        ├── 📄 auth.route.js (AUTHENTICATION ROUTES)
+        │   ├── 🔧 IMPORTS: Router, auth controllers, protectRoute
+        │   ├── 🛣️ ROUTES
+        │   │   ├── POST /login → login
+        │   │   ├── POST /logout → logout
+        │   │   ├── POST /signup → signup
+        │   │   ├── POST /onboarding → protectRoute + onboard
+        │   │   └── GET /me → protectRoute + (req, res) => user info
+        │   │
+        │   └── 📤 EXPORT: router
+        │
+        ├── 📄 user.route.js (USER ROUTES)
+        │   ├── 🔧 IMPORTS: Router, protectRoute, user controllers
+        │   ├── 🛡️ MIDDLEWARE: router.use(protectRoute)
+        │   ├── 🛣️ ROUTES
+        │   │   ├── GET / → getRecommendedUsers
+        │   │   ├── GET /friends → getMyFriends
+        │   │   ├── POST /friend-request/:id → sendFriendRequest
+        │   │   ├── PUT /friend-request/:id/accept → acceptFriendRequest
+        │   │   ├── GET /friend-request/ → getFriendRequest
+        │   │   └── GET /outgoing-friend-request → getOutgoingFriendReqs
+        │   │
+        │   └── 📤 EXPORT: router
+        │
+        └── 📄 chat.route.js (CHAT ROUTES)
+            ├── 🔧 IMPORTS: Router, protectRoute, getStreamToken
+            ├── 🛣️ ROUTES
+            │   └── GET /token → protectRoute + getStreamToken
+            │
+            └── 📤 EXPORT: router
+
+📁 notes/ (DOCUMENTATION)
+├── 📄 login.txt - Login flow diagram
+├── 📄 signup.txt - Signup flow diagram
+├── 📄 stream.txt - Stream Chat integration details
+└── 📄 project-tree.txt - This complete project structure
+
+🔗 DATA FLOW RELATIONSHIPS:
+==========================
+
+1. SERVER STARTUP FLOW:
+   server.js → connectDb() → db.js → MongoDB connection
+
+2. AUTHENTICATION FLOW:
+   auth.route.js → auth.controllers.js → User model → bcrypt → JWT → cookie
+
+3. USER MANAGEMENT FLOW:
+   user.route.js → user.controllers.js → User/FriendRequest models → MongoDB
+
+4. CHAT FLOW:
+   chat.route.js → chat.controllers.js → stream.js → Stream Chat API
+
+5. MIDDLEWARE FLOW:
+   All protected routes → auth.middleware.js → JWT verification → User lookup
+
+6. STREAM INTEGRATION FLOW:
+   auth.controllers.js → stream.js → Stream Chat API → User creation/update
+
+🔐 SECURITY LAYERS:
+==================
+1. Password Hashing: bcrypt in User model pre-save
+2. JWT Authentication: jsonwebtoken in auth middleware
+3. HTTP-only Cookies: Secure token storage
+4. Input Validation: Controllers validate all inputs
+5. Protected Routes: Middleware guards sensitive endpoints
+
+📊 DATABASE RELATIONSHIPS:
+=========================
+1. User → User (friends array - self-referencing)
+2. FriendRequest → User (sender, recipient - many-to-one)
+3. User ↔ FriendRequest (one-to-many both ways)
+
+🌐 API STRUCTURE:
+================
+/api/auth/* - Authentication endpoints
+/api/user/* - User management endpoints  
+/api/chat/* - Chat functionality endpoints
+
+All routes follow RESTful conventions with proper HTTP methods. 

@@ -1,0 +1,122 @@
+SERVER.JS - COMPLETE TREE MAP
+============================
+
+📄 backend/src/server.js (MAIN ENTRY POINT)
+├── 🔧 IMPORTS SECTION
+│   ├── import express from 'express';
+│   ├── import dotenv from 'dotenv';
+│   ├── import authRoutes from './routes/auth.route.js';
+│   ├── import userRoutes from "./routes/user.route.js"
+│   ├── import chatRoutes from "./routes/chat.route.js"
+│   ├── import { connectDb } from './lib/db.js';
+│   └── import cookieParser from "cookie-parser"
+│
+├── ⚙️ CONFIGURATION
+│   ├── dotenv.config();
+│   ├── const app = express();
+│   └── const PORT = process.env.PORT || 3000;
+│
+├── 🔧 MIDDLEWARE SETUP
+│   ├── app.use(express.json());
+│   │   └── Parses incoming JSON payloads
+│   ├── app.use(express.urlencoded({ extended: true }));
+│   │   └── Parses URL-encoded bodies
+│   └── app.use(cookieParser())
+│       └── Parses cookies from request headers
+│
+├── 🛣️ ROUTE REGISTRATION
+│   ├── app.use("/api/auth", authRoutes);
+│   │   ├── Handles: /api/auth/signup
+│   │   ├── Handles: /api/auth/login
+│   │   ├── Handles: /api/auth/logout
+│   │   ├── Handles: /api/auth/onboarding
+│   │   └── Handles: /api/auth/me
+│   │
+│   ├── app.use("/api/user", userRoutes)
+│   │   ├── Handles: /api/user/ (GET - recommended users)
+│   │   ├── Handles: /api/user/friends (GET - user's friends)
+│   │   ├── Handles: /api/user/friend-request/:id (POST - send request)
+│   │   ├── Handles: /api/user/friend-request/:id/accept (PUT - accept request)
+│   │   ├── Handles: /api/user/friend-request/ (GET - incoming requests)
+│   │   └── Handles: /api/user/outgoing-friend-request (GET - outgoing requests)
+│   │
+│   └── app.use("/api/chat", chatRoutes)
+│       └── Handles: /api/chat/token (GET - Stream Chat token)
+│
+└── 🚀 SERVER STARTUP
+    ├── app.listen(PORT, () => {
+    │   ├── console.log(`Server is running on port ${PORT}`);
+    │   └── connectDb()
+    │       ├── Connects to MongoDB using MONGO_URI
+    │       ├── Success: Logs connection host
+    │       └── Error: Logs error and exits process
+    │
+    └── Server starts listening on specified port
+
+🔗 DEPENDENCY RELATIONSHIPS:
+===========================
+
+1. EXTERNAL DEPENDENCIES:
+   ├── express: Web framework
+   ├── dotenv: Environment variable loader
+   └── cookie-parser: Cookie parsing middleware
+
+2. INTERNAL MODULE IMPORTS:
+   ├── ./routes/auth.route.js → Authentication endpoints
+   ├── ./routes/user.route.js → User management endpoints
+   ├── ./routes/chat.route.js → Chat functionality endpoints
+   └── ./lib/db.js → Database connection function
+
+3. ENVIRONMENT VARIABLES USED:
+   ├── PORT: Server port (default: 3000)
+   └── MONGO_URI: MongoDB connection string (via connectDb)
+
+🛡️ SECURITY FEATURES:
+=====================
+1. Cookie Parser: Enables secure cookie handling
+2. JSON Body Parser: Validates JSON payloads
+3. URL Encoded Parser: Handles form data
+4. Environment Variables: Secure configuration management
+
+📊 REQUEST FLOW:
+===============
+1. HTTP Request → Express App
+2. Middleware Processing:
+   ├── JSON parsing
+   ├── URL encoding parsing
+   └── Cookie parsing
+3. Route Matching:
+   ├── /api/auth/* → authRoutes
+   ├── /api/user/* → userRoutes
+   └── /api/chat/* → chatRoutes
+4. Controller Processing
+5. Response Sent
+
+🔍 DEBUGGING FEATURES:
+=====================
+- Server startup logging with port number
+- Database connection status logging
+- Error handling for database connection failures
+
+⚡ PERFORMANCE CONSIDERATIONS:
+=============================
+- Middleware order optimized for parsing
+- Database connection established at startup
+- Route grouping for efficient request handling
+- Environment-based configuration
+
+🚨 ERROR HANDLING:
+=================
+- Database connection errors trigger process exit
+- Express built-in error handling for HTTP requests
+- Environment variable fallbacks (PORT default)
+
+📋 STARTUP CHECKLIST:
+====================
+□ Environment variables loaded
+□ Express app initialized
+□ Middleware configured
+□ Routes registered
+□ Server listening on port
+□ Database connected
+□ All modules imported successfully 

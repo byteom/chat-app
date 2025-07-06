@@ -1,0 +1,43 @@
+                                 START: login() function
+                                     |
+                                     V
+                           1. Get email, password from request body
+                                     |
+    --------------------------------------------------------------------------------------
+    |                                                                                    |
+    V                                                                                    V
+2. Are email or password missing?                                                (If both are present)
+    | (Yes)                                                                              |
+    V                                                                                    V
+  Return 400: "Please enter email and password"                         3. Find user by email in database (await User.findOne({email}))
+    |                                                                                    |
+    --------------------------------------------------------------------------------------
+                                     | (No, both are present)
+                                     V
+                           4. Is user found?
+                                     |
+    --------------------------------------------------------------------------------------
+    | (No user found)                                                                    | (User found)
+    V                                                                                    V
+  Return 401: "Invalid email or password"                               5. Compare provided password with stored password (await user.matchPassword(password))
+    |                                                                                    |
+    --------------------------------------------------------------------------------------
+                                     | (User found)
+                                     V
+                           6. Is password correct?
+                                     |
+    --------------------------------------------------------------------------------------
+    | (No, password incorrect)                                                           | (Yes, password correct)
+    V                                                                                    V
+  Return 401: "Invalid email or password"                               7. Generate JWT (authentication token)
+    |                                                                                    |
+    --------------------------------------------------------------------------------------
+                                     | (Yes, password correct)
+                                     V
+                           8. Set JWT in HTTP-only cookie
+                                     |
+                                     V
+                           9. Return 200: "User logged in successfully"
+                                     |
+                                     V
+                                   END

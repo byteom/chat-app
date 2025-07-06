@@ -1,0 +1,36 @@
+                         START: signup() function
+                                     |
+                                     V
+                           1. Get email, password, fullName from request body
+                                     |
+    --------------------------------------------------------------------------------------
+    |                           |                           |                           |
+    V                           V                           V                           V
+2. Is any field missing?  3. Is password < 6 chars?   4. Is email format invalid?   5. Does user already exist?
+    | (Yes)                     | (Yes)                     | (Yes)                       | (Yes)
+    V                           V                           V                             V
+  Return 400:                Return 400:                 Return 400:                   Return 400:
+ "All fields required"     "Password too short"        "Invalid email format"        "Email already exists"
+    |                           |                           |                             |
+    --------------------------------------------------------------------------------------
+                                     | (No to all above)
+                                     V
+                           6. Generate random profile picture URL
+                                     |
+                                     V
+                           7. Create new user object (in memory)
+                                     |
+                                     V
+                           8. Generate JWT (authentication token)
+                                     |
+                                     V
+                           9. Set JWT in HTTP-only cookie
+                                     |
+                                     V
+                          10. Save new user to database (await newUser.save())
+                                     |
+                                     V
+                          11. Return 201: "User created successfully"
+                                     |
+                                     V
+                                   END

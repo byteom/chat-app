@@ -1,0 +1,255 @@
+USER MODEL - COMPLETE TREE MAP
+==============================
+
+📄 backend/src/models/User.js (USER DATABASE MODEL)
+├── 🔧 IMPORTS
+│   ├── import mongoose from "mongoose";
+│   └── import bcrypt from "bcryptjs"
+│
+├── 📋 SCHEMA DEFINITION: userSchema
+│   ├── 🔤 fullName
+│   │   ├── type: String
+│   │   └── required: true
+│   │
+│   ├── 📧 email
+│   │   ├── type: String
+│   │   ├── required: true
+│   │   └── unique: true
+│   │
+│   ├── 🔐 password
+│   │   ├── type: String
+│   │   ├── required: true
+│   │   └── minlength: 6
+│   │
+│   ├── 📝 bio
+│   │   ├── type: String
+│   │   └── default: ""
+│   │
+│   ├── 🖼️ profilePicture
+│   │   ├── type: String
+│   │   └── default: ""
+│   │
+│   ├── 🌍 nativeLanguage
+│   │   ├── type: String
+│   │   └── default: ""
+│   │
+│   ├── 📚 learningLanguage
+│   │   ├── type: String
+│   │   └── default: ""
+│   │
+│   ├── 📍 location
+│   │   ├── type: String
+│   │   └── default: ""
+│   │
+│   ├── ✅ isOnboarding
+│   │   ├── type: Boolean
+│   │   └── default: false
+│   │
+│   ├── 👥 friends
+│   │   ├── type: [mongoose.Schema.Types.ObjectId]
+│   │   └── ref: "User"
+│   │
+│   └── ⏰ timestamps: true
+│       ├── createdAt: Date
+│       └── updatedAt: Date
+│
+├── 🔐 PRE-SAVE MIDDLEWARE: userSchema.pre("save")
+│   ├── 🔍 CONDITION CHECK
+│   │   └── if(!this.isModified("password"))
+│   │       └── return next(); // Skip hashing if password unchanged
+│   │
+│   ├── 🔒 PASSWORD HASHING
+│   │   ├── try {
+│   │   │   ├── const salt = await bcrypt.genSalt(10);
+│   │   │   │   └── Generate salt with 10 rounds
+│   │   │   ├── this.password = await bcrypt.hash(this.password, salt);
+│   │   │   │   └── Hash password with generated salt
+│   │   │   └── next();
+│   │   │       └── Continue to save operation
+│   │   └── } catch (error) {
+│   │       └── next(error);
+│   │           └── Pass error to error handling
+│   │
+│   └── 🔄 EXECUTION TRIGGERS
+│       ├── User.create() - New user creation
+│       ├── user.save() - User document save
+│       └── User.findByIdAndUpdate() - User updates (if password changed)
+│
+├── 🔑 INSTANCE METHODS: userSchema.methods
+│   └── matchPassword(enteredPassword)
+│       ├── 📥 INPUT: enteredPassword (string)
+│       ├── 🔍 COMPARISON: await bcrypt.compare(enteredPassword, this.password)
+│       │   ├── Compare plain text with hashed password
+│       │   └── Returns: boolean (true if match, false otherwise)
+│       └── 📤 OUTPUT: boolean
+│
+├── 🏗️ MODEL CREATION
+│   ├── const User = mongoose.model("User", userSchema);
+│   └── Collection name: "users" (MongoDB pluralizes)
+│
+└── 📤 EXPORT
+    └── export default User;
+
+🔗 RELATIONSHIPS:
+================
+
+1. SELF-REFERENCING RELATIONSHIP:
+   ├── User → User (friends array)
+   ├── Type: One-to-Many (one user can have many friends)
+   ├── Reference: mongoose.Schema.Types.ObjectId
+   └── Population: .populate("friends", "fields")
+
+2. FRIEND REQUEST RELATIONSHIP:
+   ├── FriendRequest → User (sender, recipient)
+   ├── Type: Many-to-One (many requests can point to one user)
+   └── Reference: mongoose.Schema.Types.ObjectId
+
+🔐 SECURITY FEATURES:
+====================
+
+1. PASSWORD HASHING:
+   ├── Algorithm: bcrypt
+   ├── Salt Rounds: 10
+   ├── Trigger: Pre-save middleware
+   └── Storage: Hashed password only
+
+2. PASSWORD VALIDATION:
+   ├── Minimum Length: 6 characters
+   ├── Required Field: true
+   └── Type: String
+
+3. EMAIL VALIDATION:
+   ├── Required Field: true
+   ├── Unique Constraint: true
+   └── Type: String
+
+🔄 DATA FLOW:
+=============
+
+1. USER CREATION FLOW:
+   ├── User.create({email, password, fullName})
+   ├── Pre-save middleware triggers
+   ├── Password hashed with bcrypt
+   ├── User saved to database
+   └── User object returned
+
+2. PASSWORD VERIFICATION FLOW:
+   ├── user.matchPassword(enteredPassword)
+   ├── bcrypt.compare() called
+   ├── Returns true/false
+   └── Used in login process
+
+3. FRIEND MANAGEMENT FLOW:
+   ├── User.findByIdAndUpdate() to add/remove friends
+   ├── Friends array updated
+   ├── Timestamps automatically updated
+   └── User document returned
+
+📊 DATABASE OPERATIONS:
+======================
+
+1. CREATE OPERATIONS:
+   ├── User.create() - Create new user
+   └── Triggers: Pre-save middleware
+
+2. READ OPERATIONS:
+   ├── User.findById() - Find by ID
+   ├── User.findOne() - Find by criteria
+   ├── User.find() - Find multiple users
+   └── .populate() - Populate references
+
+3. UPDATE OPERATIONS:
+   ├── User.findByIdAndUpdate() - Update by ID
+   ├── User.updateOne() - Update single document
+   └── Triggers: Pre-save middleware (if password changed)
+
+4. DELETE OPERATIONS:
+   ├── User.findByIdAndDelete() - Delete by ID
+   └── User.deleteOne() - Delete single document
+
+🔍 VALIDATION RULES:
+===================
+
+1. REQUIRED FIELDS:
+   ├── fullName: Must be provided
+   ├── email: Must be provided and unique
+   └── password: Must be provided and ≥6 characters
+
+2. OPTIONAL FIELDS:
+   ├── bio: Defaults to empty string
+   ├── profilePicture: Defaults to empty string
+   ├── nativeLanguage: Defaults to empty string
+   ├── learningLanguage: Defaults to empty string
+   ├── location: Defaults to empty string
+   └── isOnboarding: Defaults to false
+
+3. ARRAY FIELDS:
+   └── friends: Array of ObjectIds referencing User documents
+
+⚡ PERFORMANCE CONSIDERATIONS:
+=============================
+
+1. INDEXING:
+   ├── email: Unique index (automatic)
+   ├── _id: Primary key index (automatic)
+   └── friends: Array index (for queries)
+
+2. POPULATION:
+   ├── Selective field population for performance
+   ├── Example: .populate("friends", "fullName profilePicture")
+   └── Avoids loading unnecessary data
+
+3. QUERY OPTIMIZATION:
+   ├── Use .select() to limit returned fields
+   ├── Use .lean() for read-only operations
+   └── Use aggregation for complex queries
+
+🚨 ERROR HANDLING:
+=================
+
+1. VALIDATION ERRORS:
+   ├── Required field missing
+   ├── Email not unique
+   ├── Password too short
+   └── Invalid data types
+
+2. HASHING ERRORS:
+   ├── bcrypt salt generation failure
+   ├── bcrypt hash generation failure
+   └── Passed to error handling middleware
+
+3. DATABASE ERRORS:
+   ├── Connection issues
+   ├── Query failures
+   └── Constraint violations
+
+📋 USAGE EXAMPLES:
+==================
+
+1. CREATE USER:
+   ```javascript
+   const user = await User.create({
+     email: "user@example.com",
+     password: "password123",
+     fullName: "John Doe"
+   });
+   ```
+
+2. VERIFY PASSWORD:
+   ```javascript
+   const isMatch = await user.matchPassword("password123");
+   ```
+
+3. ADD FRIEND:
+   ```javascript
+   await User.findByIdAndUpdate(userId, {
+     $addToSet: { friends: friendId }
+   });
+   ```
+
+4. GET FRIENDS WITH POPULATION:
+   ```javascript
+   const user = await User.findById(userId)
+     .select("friends")
+     .populate("friends", "fullName profilePicture");
+   ``` 
