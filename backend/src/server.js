@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/auth.route.js';
 import userRoutes from "./routes/user.route.js"
 import  chatRoutes from "./routes/chat.route.js"
+import cors from 'cors';
 
 import { connectDb } from './lib/db.js';
 import cookieParser from "cookie-parser"
@@ -14,6 +15,10 @@ const PORT = process.env.PORT || 3000;
 
 
 // Middleware to parse JSON and URL-encoded data
+app.use(cors({
+  origin: process.env.CLIENT_URL,
+  credentials: true, // Allow credentials (cookies, authorization headers, etc.)
+}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
